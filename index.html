@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexo Lab — Digital Design Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #111111;
+    --border: #1e1e1e;
+    --accent: #c8f25a;
+    --accent2: #ff3c5f;
+    --text: #f0f0f0;
+    --muted: #666;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  @media (pointer: fine) {
+    body { cursor: none; }
+  }
+  @media (pointer: coarse) {
+    .cursor, .cursor-ring { display: none; }
+  }
+
+  /* Hamburger menu */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 300;
+  }
+  .nav-hamburger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--text);
+    transition: all 0.3s ease;
+  }
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8,8,8,0.97);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    backdrop-filter: blur(16px);
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 2.2rem;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .mobile-menu a:hover, .mobile-menu a:active { color: var(--accent); }
+
+  /* Custom cursor */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 40px; height: 40px;
+    border: 1px solid rgba(200,242,90,0.4);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.35s ease;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 48px;
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 16px; fill: #080808; }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #080808;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 22px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .nav-cta:hover { transform: translateY(-2px); background: #d8ff6a; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-noise {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(200,242,90,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,242,90,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: min(600px, 100vw);
+    height: min(600px, 100vw);
+    background: radial-gradient(circle, rgba(200,242,90,0.07) 0%, transparent 70%);
+    top: 50%; left: 60%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    padding: 6px 16px;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 40px;
+    width: fit-content;
+    animation: fadeUp 0.8s ease both;
+  }
+  .hero-tag span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+  .hero-headline {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero-headline .accent-word {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 440px;
+    line-height: 1.7;
+    margin-top: 32px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 48px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #080808;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 16px 36px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(200,242,90,0.25);
+  }
+
+  .btn-secondary {
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 16px 36px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .hero-bottom {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    margin-top: 80px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+  .stat-num {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .hero-scroll {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px; height: 48px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+    animation: scrollPulse 2s infinite;
+  }
+
+  /* MARQUEE */
+  .marquee-wrap {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    padding: 16px 0;
+    background: var(--surface);
+  }
+  .marquee-track {
+    display: flex;
+    gap: 0;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+  .marquee-item {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 32px;
+    font-family: var(--font-head);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .marquee-dot { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+
+  /* SERVICES */
+  .section { padding: 100px 48px; }
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: '';
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    max-width: 700px;
+    margin-bottom: 64px;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .service-card {
+    background: var(--bg);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .service-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+  }
+  .service-card:hover { background: #0e0e0e; }
+  .service-card:hover::after { transform: scaleX(1); }
+
+  .service-num {
+    font-family: var(--font-head);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    margin-bottom: 32px;
+  }
+  .service-icon {
+    width: 48px; height: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    font-size: 1.4rem;
+  }
+  .service-name {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+  .service-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+
+  /* PROCESS */
+  .process-section { background: var(--surface); }
+
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+    margin-top: 0;
+    border: 1px solid var(--border);
+  }
+
+  .process-step {
+    padding: 40px 32px;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .process-step:last-child { border-right: none; }
+
+  .step-num {
+    font-family: var(--font-head);
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+  .step-name {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+  .step-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.7; }
+
+  /* WHY */
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .why-left {}
+  .why-items { display: flex; flex-direction: column; gap: 0; }
+  .why-item {
+    display: flex;
+    gap: 24px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .why-item:first-child { border-top: 1px solid var(--border); }
+  .why-check {
+    width: 24px; height: 24px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .why-check svg { width: 12px; stroke: #080808; fill: none; stroke-width: 2.5; }
+  .why-item-title {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+  .why-item-text { font-size: 0.82rem; color: var(--muted); line-height: 1.7; }
+
+  .why-right {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 48px;
+    position: relative;
+  }
+  .why-right::before {
+    content: '"';
+    font-family: var(--font-head);
+    font-size: clamp(5rem, 15vw, 8rem);
+    color: var(--accent);
+    position: absolute;
+    top: -20px; left: 24px;
+    line-height: 1;
+    opacity: 0.3;
+  }
+  .testimonial-text {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 32px;
+    position: relative;
+    z-index: 1;
+  }
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .author-avatar {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #080808;
+  }
+  .author-info {}
+  .author-name { font-family: var(--font-head); font-weight: 700; font-size: 0.85rem; }
+  .author-role { font-size: 0.72rem; color: var(--muted); }
+
+  /* CTA BANNER */
+  .cta-banner {
+    margin: 0 48px 80px;
+    background: var(--accent);
+    padding: 64px 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-banner::before {
+    content: '';
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 300px; height: 300px;
+    border: 1px solid rgba(8,8,8,0.12);
+    border-radius: 50%;
+  }
+  .cta-banner::after {
+    content: '';
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 200px; height: 200px;
+    border: 1px solid rgba(8,8,8,0.12);
+    border-radius: 50%;
+  }
+  .cta-text {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    color: #080808;
+    line-height: 1.1;
+    max-width: 520px;
+  }
+  .btn-dark {
+    background: #080808;
+    color: var(--accent);
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 18px 40px;
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .btn-dark:hover { transform: translateY(-3px); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  .footer-logo {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .footer-copy { font-size: 0.75rem; color: var(--muted); }
+  .footer-links {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+  }
+  .footer-links a {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--accent); }
+
+  /* LANG TOGGLE */
+  .lang-toggle {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 250;
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .lang-btn {
+    padding: 10px 18px;
+    font-family: var(--font-head);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-btn.active { background: var(--accent); color: #080808; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* MOBILE — small phones */
+  @media (max-width: 480px) {
+    nav {
+      padding: 16px 20px;
+    }
+    .nav-links { display: none; }
+    .nav-cta { display: none; }
+    .nav-hamburger { display: flex; }
+    .nav-cta {
+      padding: 8px 14px;
+      font-size: 0.68rem;
+    }
+    .hero {
+      padding: 96px 20px 56px;
+    }
+    .hero-headline {
+      font-size: clamp(2.8rem, 13vw, 4rem);
+      line-height: 1;
+    }
+    .hero-sub {
+      font-size: 0.9rem;
+      margin-top: 24px;
+    }
+    .hero-actions {
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 36px;
+    }
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      text-align: center;
+      padding: 16px 24px;
+    }
+    .hero-bottom {
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .hero-scroll { display: none; }
+
+    .section { padding: 60px 20px; }
+    .section-title { font-size: clamp(1.8rem, 8vw, 2.4rem); margin-bottom: 40px; }
+
+    .services-grid {
+      grid-template-columns: 1fr;
+    }
+    .service-card { padding: 36px 24px; }
+
+    .process-steps {
+      grid-template-columns: 1fr;
+    }
+    .process-step {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 32px 20px;
+    }
+    .process-step:last-child { border-bottom: none; }
+
+    .why-grid { grid-template-columns: 1fr; gap: 40px; }
+    .why-right { padding: 32px 24px; }
+    .testimonial-text { font-size: 0.95rem; }
+
+    .cta-banner {
+      margin: 0 20px 60px;
+      padding: 36px 24px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 28px;
+    }
+    .cta-text { font-size: clamp(1.5rem, 7vw, 2rem); }
+    .btn-dark {
+      width: 100%;
+      text-align: center;
+      padding: 16px 24px;
+    }
+
+    footer {
+      padding: 36px 20px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .footer-links { flex-wrap: wrap; gap: 16px; }
+
+    .lang-toggle {
+      bottom: 20px;
+      right: 20px;
+    }
+  }
+
+  /* MOBILE — tablets & larger phones */
+  @media (min-width: 481px) and (max-width: 768px) {
+    nav { padding: 20px 28px; }
+    .nav-links { display: none; }
+    .nav-cta { display: none; }
+    .nav-hamburger { display: flex; }
+
+    .hero { padding: 108px 28px 64px; }
+    .hero-headline { font-size: clamp(3rem, 10vw, 5rem); line-height: 0.98; }
+    .hero-actions {
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 40px;
+    }
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      text-align: center;
+    }
+    .hero-bottom { flex-wrap: wrap; gap: 28px; }
+    .hero-scroll { display: none; }
+
+    .section { padding: 72px 28px; }
+    .section-title { font-size: clamp(2rem, 6vw, 2.8rem); margin-bottom: 48px; }
+
+    .services-grid { grid-template-columns: 1fr; }
+    .service-card { padding: 40px 32px; }
+
+    .process-steps { grid-template-columns: 1fr 1fr; }
+    .process-step { border-right: none; border-bottom: 1px solid var(--border); padding: 32px 24px; }
+    .process-step:nth-child(odd) { border-right: 1px solid var(--border); }
+    .process-step:last-child, .process-step:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+
+    .why-grid { grid-template-columns: 1fr; gap: 48px; }
+    .why-right { padding: 40px 32px; }
+
+    .cta-banner {
+      margin: 0 28px 64px;
+      padding: 48px 36px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 28px;
+    }
+    .cta-text { font-size: clamp(1.6rem, 5vw, 2.2rem); }
+    .btn-dark { white-space: normal; text-align: center; }
+
+    footer { padding: 40px 28px; flex-direction: column; align-items: flex-start; gap: 20px; }
+    .footer-links { flex-wrap: wrap; gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 4l2.5-4 2.5 4z"/></svg>
+    </div>
+    NEXO LAB
+  </div>
+  <ul class="nav-links">
+    <li><a href="#servicios" data-es="Servicios" data-en="Services">Servicios</a></li>
+    <li><a href="#proceso" data-es="Proceso" data-en="Process">Proceso</a></li>
+    <li><a href="#nosotros" data-es="Nosotros" data-en="About">Nosotros</a></li>
+  </ul>
+  <a href="#contacto" class="nav-cta" data-es="Hablemos" data-en="Let's talk">Hablemos</a>
+  <button class="nav-hamburger" id="hamburger" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU OVERLAY -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#servicios" class="mobile-nav-link" data-es="Servicios" data-en="Services">Servicios</a>
+  <a href="#proceso" class="mobile-nav-link" data-es="Proceso" data-en="Process">Proceso</a>
+  <a href="#nosotros" class="mobile-nav-link" data-es="Nosotros" data-en="About">Nosotros</a>
+  <a href="#contacto" class="mobile-nav-link" data-es="Contacto" data-en="Contact">Contacto</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-noise"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-tag">
+    <span></span>
+    <span data-es="Estudio Digital · Santo Domingo" data-en="Digital Studio · Santo Domingo">Estudio Digital · Santo Domingo</span>
+  </div>
+
+  <h1 class="hero-headline">
+    <span data-es="Páginas que" data-en="Websites that">Páginas que</span><br>
+    <em class="accent-word" data-es="convierten" data-en="convert">convierten</em><br>
+    <span data-es="clientes." data-en="clients.">clientes.</span>
+  </h1>
+
+  <p class="hero-sub" data-es="Diseñamos y desarrollamos páginas web profesionales para emprendimientos y negocios que quieren verse grandes desde el primer día." data-en="We design and develop professional websites for businesses and entrepreneurs who want to look big from day one.">
+    Diseñamos y desarrollamos páginas web profesionales para emprendimientos y negocios que quieren verse grandes desde el primer día.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#contacto" class="btn-primary" data-es="Comenzar proyecto" data-en="Start a project">Comenzar proyecto</a>
+    <a href="#servicios" class="btn-secondary" data-es="Ver servicios" data-en="View services">Ver servicios</a>
+  </div>
+
+  <div class="hero-bottom">
+    <div class="stat">
+      <span class="stat-num">100%</span>
+      <span class="stat-label" data-es="Personalizado" data-en="Custom-built">Personalizado</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">24h</span>
+      <span class="stat-label" data-es="Tiempo de respuesta" data-en="Response time">Tiempo de respuesta</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">∞</span>
+      <span class="stat-label" data-es="Revisiones incluidas" data-en="Revisions included">Revisiones incluidas</span>
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<!-- SERVICES -->
+<section class="section" id="servicios">
+  <div class="section-label" data-es="Lo que hacemos" data-en="What we do">Lo que hacemos</div>
+  <h2 class="section-title reveal" data-es="Soluciones web que trabajan por tu negocio" data-en="Web solutions that work for your business">
+    Soluciones web que trabajan por tu negocio
+  </h2>
+  <div class="services-grid reveal">
+    <div class="service-card">
+      <div class="service-num">01</div>
+      <div class="service-icon">🖥</div>
+      <div class="service-name" data-es="Página Web Profesional" data-en="Professional Website">Página Web Profesional</div>
+      <div class="service-desc" data-es="Diseño único, moderno y adaptado a tu marca. Optimizada para móviles y lista para destacar desde el primer clic." data-en="Unique, modern design tailored to your brand. Mobile-optimized and ready to stand out from the first click.">
+        Diseño único, moderno y adaptado a tu marca. Optimizada para móviles y lista para destacar desde el primer clic.
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-num">02</div>
+      <div class="service-icon">🛒</div>
+      <div class="service-name" data-es="Catálogo / Tienda Online" data-en="Catalog / Online Store">Catálogo / Tienda Online</div>
+      <div class="service-desc" data-es="Muestra tus productos o servicios con un catálogo visual atractivo. Tus clientes ven, eligen y te contactan sin fricción." data-en="Showcase your products or services with an attractive visual catalog. Your clients see, choose, and contact you without friction.">
+        Muestra tus productos o servicios con un catálogo visual atractivo. Tus clientes ven, eligen y te contactan sin fricción.
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-num">03</div>
+      <div class="service-icon">📍</div>
+      <div class="service-name" data-es="Página Multi-Zona" data-en="Multi-Location Page">Página Multi-Zona</div>
+      <div class="service-desc" data-es="¿Tienes presencia en dos ciudades o países? Una sola página que sirve a ambas zonas con información y contacto diferenciado." data-en="Do you operate in two cities or countries? One page that serves both locations with differentiated info and contacts.">
+        ¿Tienes presencia en dos ciudades o países? Una sola página que sirve a ambas zonas con información y contacto diferenciado.
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-num">04</div>
+      <div class="service-icon">⚡</div>
+      <div class="service-name" data-es="Landing de Lanzamiento" data-en="Launch Landing Page">Landing de Lanzamiento</div>
+      <div class="service-desc" data-es="¿Lanzando algo nuevo? Una página de impacto diseñada para captar atención y convertir visitantes en clientes desde el día uno." data-en="Launching something new? A high-impact page designed to capture attention and convert visitors into clients from day one.">
+        ¿Lanzando algo nuevo? Una página de impacto diseñada para captar atención y convertir visitantes en clientes desde el día uno.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="section process-section" id="proceso">
+  <div class="section-label" data-es="Cómo trabajamos" data-en="How we work">Cómo trabajamos</div>
+  <h2 class="section-title reveal" data-es="Simple, rápido y sin complicaciones" data-en="Simple, fast, and no complications">
+    Simple, rápido y sin complicaciones
+  </h2>
+  <div class="process-steps reveal">
+    <div class="process-step">
+      <div class="step-num">01</div>
+      <div class="step-name" data-es="Conversamos" data-en="We talk">Conversamos</div>
+      <div class="step-desc" data-es="Me cuentas tu negocio, tus metas y tu estilo. Todo por WhatsApp, sin reuniones complicadas." data-en="You tell me about your business, goals and style. All via WhatsApp, no complicated meetings.">
+        Me cuentas tu negocio, tus metas y tu estilo. Todo por WhatsApp, sin reuniones complicadas.
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">02</div>
+      <div class="step-name" data-es="Diseñamos" data-en="We design">Diseñamos</div>
+      <div class="step-desc" data-es="Creo una muestra rápida para que veas la dirección visual antes de comprometerte con nada." data-en="I create a quick preview so you see the visual direction before committing to anything.">
+        Creo una muestra rápida para que veas la dirección visual antes de comprometerte con nada.
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">03</div>
+      <div class="step-name" data-es="Refinamos" data-en="We refine">Refinamos</div>
+      <div class="step-desc" data-es="Ajustamos juntos hasta que quede exactamente como lo imaginaste. Sin límite de revisiones." data-en="We adjust together until it looks exactly as you imagined. No revision limit.">
+        Ajustamos juntos hasta que quede exactamente como lo imaginaste. Sin límite de revisiones.
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">04</div>
+      <div class="step-name" data-es="Lanzamos" data-en="We launch">Lanzamos</div>
+      <div class="step-desc" data-es="Tu página va en vivo. Rápida, segura y lista para que el mundo te encuentre." data-en="Your page goes live. Fast, secure and ready for the world to find you.">
+        Tu página va en vivo. Rápida, segura y lista para que el mundo te encuentre.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="section" id="nosotros">
+  <div class="why-grid">
+    <div class="why-left">
+      <div class="section-label" data-es="Por qué Nexo Lab" data-en="Why Nexo Lab">Por qué Nexo Lab</div>
+      <h2 class="section-title reveal" style="margin-bottom: 0;" data-es="Tu negocio merece una presencia digital real" data-en="Your business deserves a real digital presence">
+        Tu negocio merece una presencia digital real
+      </h2>
+      <div class="why-items" style="margin-top: 40px;">
+        <div class="why-item reveal">
+          <div class="why-check">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="why-item-title" data-es="Entrega rápida" data-en="Fast delivery">Entrega rápida</div>
+            <div class="why-item-text" data-es="Tu página lista en días, no en meses. Porque el tiempo de tu negocio vale." data-en="Your page ready in days, not months. Because your business time is valuable.">
+              Tu página lista en días, no en meses. Porque el tiempo de tu negocio vale.
+            </div>
+          </div>
+        </div>
+        <div class="why-item reveal">
+          <div class="why-check">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="why-item-title" data-es="100% personalizado" data-en="100% custom">100% personalizado</div>
+            <div class="why-item-text" data-es="No usamos plantillas genéricas. Cada página que hacemos es única para esa marca." data-en="We don't use generic templates. Every page we make is unique for that brand.">
+              No usamos plantillas genéricas. Cada página que hacemos es única para esa marca.
+            </div>
+          </div>
+        </div>
+        <div class="why-item reveal">
+          <div class="why-check">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="why-item-title" data-es="Soporte continuo" data-en="Ongoing support">Soporte continuo</div>
+            <div class="why-item-text" data-es="Estamos ahí después del lanzamiento. Cualquier ajuste, actualización o duda, respondemos." data-en="We're there after launch. Any adjustment, update or question, we respond.">
+              Estamos ahí después del lanzamiento. Cualquier ajuste, actualización o duda, respondemos.
+            </div>
+          </div>
+        </div>
+        <div class="why-item reveal">
+          <div class="why-check">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="why-item-title" data-es="Precios justos" data-en="Fair pricing">Precios justos</div>
+            <div class="why-item-text" data-es="Calidad profesional accesible para emprendimientos reales. Sin sorpresas ni costos ocultos." data-en="Professional quality accessible for real businesses. No surprises or hidden costs.">
+              Calidad profesional accesible para emprendimientos reales. Sin sorpresas ni costos ocultos.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="why-right reveal">
+      <p class="testimonial-text" data-es='"Hizo la página en minutos y ya se veía increíble. Imagínate cuando esté completamente terminada con todo personalizado. Súper profesional y me gustó muchísimo."' data-en='"He made the page in minutes and it already looked incredible. Imagine when it\'s fully finished with everything customized. Super professional, I loved it."'>
+        "Hizo la página en minutos y ya se veía increíble. Imagínate cuando esté completamente terminada con todo personalizado. Súper profesional y me gustó muchísimo."
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">JA</div>
+        <div class="author-info">
+          <div class="author-name">Adimarys</div>
+          <div class="author-role" data-es="Jardín Adimarys · Santo Domingo" data-en="Jardín Adimarys · Santo Domingo">Jardín Adimarys · Santo Domingo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-banner reveal" id="contacto">
+  <div class="cta-text" data-es="¿Listo para tener la página que tu negocio merece?" data-en="Ready to have the website your business deserves?">
+    ¿Listo para tener la página que tu negocio merece?
+  </div>
+  <a href="https://wa.me/18094000000" class="btn-dark" data-es="Escríbenos por WhatsApp →" data-en="Message us on WhatsApp →">Escríbenos por WhatsApp →</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16" style="width:16px;fill:#080808"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 4l2.5-4 2.5 4z"/></svg>
+    </div>
+    NEXO LAB
+  </div>
+  <p class="footer-copy" data-es="© 2025 Nexo Lab · Todos los derechos reservados" data-en="© 2025 Nexo Lab · All rights reserved">© 2025 Nexo Lab · Todos los derechos reservados</p>
+  <ul class="footer-links">
+    <li><a href="#servicios" data-es="Servicios" data-en="Services">Servicios</a></li>
+    <li><a href="#proceso" data-es="Proceso" data-en="Process">Proceso</a></li>
+    <li><a href="#contacto" data-es="Contacto" data-en="Contact">Contacto</a></li>
+  </ul>
+</footer>
+
+<!-- LANG TOGGLE -->
+<div class="lang-toggle">
+  <button class="lang-btn active" onclick="setLang('es')">ES</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+
+<script>
+  // Hamburger menu
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+    document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+  });
+  document.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('open');
+      mobileMenu.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
+
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cursor.style.left = mx - 6 + 'px';
+    cursor.style.top = my - 6 + 'px';
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx - 20 + 'px';
+    ring.style.top = ry - 20 + 'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+
+  // Marquee
+  const items = ['Páginas Web', 'Diseño Profesional', 'Catálogos Online', 'Multi-Zona', 'Santo Domingo', 'El Bronx NY', 'Lanzamiento Rápido', 'Tu Marca en Digital'];
+  const track = document.getElementById('marqueeTrack');
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    items.forEach(item => {
+      html += `<div class="marquee-item"><span class="marquee-dot"></span>${item}</div>`;
+    });
+  }
+  track.innerHTML = html;
+
+  // Reveal on scroll
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => obs.observe(r));
+
+  // Language
+  let lang = 'es';
+  function setLang(l) {
+    lang = l;
+    document.querySelectorAll('[data-es]').forEach(el => {
+      el.textContent = el.getAttribute('data-' + l);
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.toLowerCase() === l);
+    });
+  }
+</script>
+</body>
+</html>
